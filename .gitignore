@@ -30,3 +30,11 @@
 *.exe
 *.out
 *.app
+
+main.cpp
+
+*.kdev4
+Bin/
+bin/
+build/
+Build/
