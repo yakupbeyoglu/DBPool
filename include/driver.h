@@ -17,9 +17,8 @@ namespace db_driver {
  * executing queries, and checking the connection status, so all basic
  * operations for the database drivers.
  *
- * @tparam SqlResult Type representing a result set from a database query.
  */
-template <typename SqlResult> class Driver {
+class Driver {
 public:
   /**
    * @brief Establishes a connection to the database.
@@ -50,10 +49,12 @@ public:
    *
    * @param query The SQL SELECT query to execute.
    * @param params Variable number of string parameters to bind to the query.
+   * @param keys, Keys that should be mapped for results
    * @return The result set obtained from executing the query.
    */
-  virtual SqlResult ExecuteSelect(const std::string &query,
-                                  const std::vector<std::any> &params) = 0;
+  virtual types::SqlResults ExecuteSelect(const std::string &query,
+                                          const std::vector<std::any> &params,
+                                          std::vector<std::string> keys) = 0;
 
   /**
    * @brief Executes a SELECT query on the database.
@@ -61,9 +62,11 @@ public:
    * This method does not use prepared statement and can cause SQL injection.
    *
    * @param query The SQL SELECT query to execute.
+   * @param keys, Keys that should be mapped for results
    * @return The result set obtained from executing the query.
    */
-  virtual SqlResult ExecuteSelect(const std::string &query) = 0;
+  virtual types::SqlResults ExecuteSelect(const std::string &query,
+                                          std::vector<std::string> keys) = 0;
 
   /**
    * @brief Executes a non-SELECT query on the database.

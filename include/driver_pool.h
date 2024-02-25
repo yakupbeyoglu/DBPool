@@ -17,9 +17,8 @@ namespace db_pool {
  * creation and reuse. It provides methods to obtain and return database
  * connections.
  *
- * @tparam SqlResult Type representing the result set from a database query.
  */
-template <typename SqlResult> class DatabaseConnectionPool {
+class DatabaseConnectionPool {
 public:
   /**
    * @brief Constructs a new DatabaseConnectionPool object.
@@ -36,8 +35,8 @@ public:
         pool_size(pool_size) {
     // Create database connections and add them to the pool
     for (size_t i = 0; i < pool_size; ++i) {
-      auto connection = db_driver::DriverFactory::createDriver<SqlResult>(
-          driver_type, properties);
+      auto connection =
+          db_driver::DriverFactory::createDriver(driver_type, properties);
       connection->Connect();
       pool.push(connection);
     }
@@ -57,8 +56,7 @@ public:
    * will return nullptr
    *
    */
-  std::shared_ptr<db_driver::Driver<SqlResult>>
-  getConnection(std::size_t timeout = 30) {
+  std::shared_ptr<db_driver::Driver> getConnection(std::size_t timeout = 30) {
     std::unique_lock<std::mutex> lock(mutex);
     // Use a predicate function to check if the pool is empty
     auto predicate = [&] { return !pool.empty(); };
@@ -82,8 +80,7 @@ public:
    *
    * @param connection The database connection to return to the pool.
    */
-  void
-  returnConnection(std::shared_ptr<db_driver::Driver<SqlResult>> connection) {
+  void returnConnection(std::shared_ptr<db_driver::Driver> connection) {
     std::lock_guard<std::mutex> lock(mutex);
     if (pool.size() + 1 > pool_size)
       throw std::out_of_range(
@@ -103,7 +100,7 @@ private:
       connection_properties; /**< Connection properties for establishing
                                 database connections. */
   size_t pool_size;          /**< The maximum size of the connection pool. */
-  std::queue<std::shared_ptr<db_driver::Driver<SqlResult>>>
+  std::queue<std::shared_ptr<db_driver::Driver>>
       pool; /**< Queue for storing database connections. */
   std::mutex
       mutex; /**< Mutex for synchronizing access to the connection pool. */

@@ -8,15 +8,15 @@
 #include <cppconn/resultset.h>
 #include <driver.h>
 #include <memory>
+
 #include <mysql_connection.h>
 #include <mysql_driver.h>
 #include <mysql_error.h>
 
 namespace db_pool {
 namespace db_driver {
-using SqlResult = std::unique_ptr<sql::ResultSet>;
 
-class MYSQLDriver : public Driver<SqlResult> {
+class MYSQLDriver : public Driver {
 public:
   MYSQLDriver(const types::ConnectionProperties &properties)
       : connection_properties(properties) {}
@@ -36,10 +36,13 @@ public:
     return conn == nullptr ? false : conn->isValid();
   }
 
-  virtual SqlResult ExecuteSelect(const std::string &query,
-                                  const std::vector<std::any> &params) override;
+  virtual types::SqlResults
+  ExecuteSelect(const std::string &query, const std::vector<std::any> &params,
+                std::vector<std::string> keys) override;
 
-  virtual SqlResult ExecuteSelect(const std::string &query) override;
+  virtual types::SqlResults
+  ExecuteSelect(const std::string &query,
+                std::vector<std::string> keys) override;
 
   virtual bool Execute(const std::string &query,
                        const std::vector<std::any> &params) override;

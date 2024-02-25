@@ -1,14 +1,13 @@
 #ifndef DRIVER_FACTORY_H_
 #define DRIVER_FACTORY_H_
 #include "driver.h"
-#include "mysqldriver.h"
+#include "mysql_driver.h"
 #include <memory>
 namespace db_pool {
 namespace db_driver {
 class DriverFactory {
 public:
-  template <typename SqlResult>
-  static std::shared_ptr<Driver<SqlResult>>
+  static std::shared_ptr<Driver>
   createDriver(types::Driver type,
                const types::ConnectionProperties &properties) {
     switch (type) {

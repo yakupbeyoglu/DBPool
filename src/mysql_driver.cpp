@@ -1,4 +1,4 @@
-#include "mysqldriver.h"
+#include "mysql_driver.h"
 #include <algorithm>
 
 namespace db_pool {
@@ -33,8 +33,10 @@ bool MYSQLDriver::Disconnect() {
   return conn->isClosed();
 }
 
-SqlResult MYSQLDriver::ExecuteSelect(const std::string &query,
-                                     const std::vector<std::any> &params) {
+types::SqlResults
+MYSQLDriver::ExecuteSelect(const std::string &query,
+                           const std::vector<std::any> &params,
+                           std::vector<std::string> keys) {
   try {
     if (conn == nullptr || conn->isClosed())
       throw std::runtime_error(
@@ -49,7 +51,18 @@ SqlResult MYSQLDriver::ExecuteSelect(const std::string &query,
     for (std::size_t i = 0; i < params.size(); ++i) {
       QueryBuilder(*pstmt, i, params[i]);
     }
-    return SqlResult(pstmt->executeQuery());
+
+    sql::ResultSet *result = pstmt->executeQuery();
+    types::SqlResults results;
+    while (result->next()) {
+      types::SqlBlock block;
+      for (auto &key : keys)
+        block.emplace(key, result->getString(key));
+      results.emplace_back(std::move(block));
+    }
+    delete result;
+
+    return results;
 
   } catch (const sql::SQLException &e) {
     throw std::runtime_error(std::string("Error executing SELECT query: ") +
@@ -60,14 +73,26 @@ SqlResult MYSQLDriver::ExecuteSelect(const std::string &query,
   }
 }
 
-SqlResult MYSQLDriver::ExecuteSelect(const std::string &query) {
+types::SqlResults MYSQLDriver::ExecuteSelect(const std::string &query,
+                                             std::vector<std::string> keys) {
   try {
 
     if (conn == nullptr || conn->isClosed())
       throw std::runtime_error(
           "The databsae connection is not valid to execute query !");
-    std::unique_ptr<sql::Statement> pstmt(conn->createStatement());
-    return SqlResult(pstmt->executeQuery(query));
+    std::unique_ptr<sql::Statement> stmt(conn->createStatement());
+
+    sql::ResultSet *result = stmt->executeQuery(query);
+    types::SqlResults results;
+    while (result->next()) {
+      types::SqlBlock block;
+      for (auto &key : keys)
+        block.emplace(key, result->getString(key));
+      results.emplace_back(std::move(block));
+    }
+    delete result;
+
+    return results;
   } catch (const sql::SQLException &e) {
     throw std::runtime_error(std::string("Error executing SELECT query: ") +
                              e.what());
